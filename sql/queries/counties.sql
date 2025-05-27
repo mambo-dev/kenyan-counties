@@ -18,7 +18,5 @@ SELECT * FROM counties
 ORDER BY name
 LIMIT ? OFFSET ?;
 
--- name: DeleteCountyByID :exec
-DELETE FROM counties
-WHERE id = ?;
+
 
