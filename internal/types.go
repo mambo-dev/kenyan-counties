@@ -38,3 +38,8 @@ type WardResponse struct {
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
+
+type PaginatedResponse struct {
+	TotalCount int64       `json:"total_count"`
+	Data       interface{} `json:"items"`
+}

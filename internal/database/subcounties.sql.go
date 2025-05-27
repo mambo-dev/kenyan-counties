@@ -44,7 +44,7 @@ func (q *Queries) CreateSubCounty(ctx context.Context, arg CreateSubCountyParams
 const getSubCountiesByCountyID = `-- name: GetSubCountiesByCountyID :many
 SELECT id, name, county_id, sub_county_given_id, created_at, updated_at FROM sub_counties
 WHERE county_id = ?
-ORDER BY name
+ORDER BY sub_county_given_id
 LIMIT ? OFFSET ?
 `
 
@@ -143,7 +143,7 @@ func (q *Queries) GetSubCountyByName(ctx context.Context, name string) (SubCount
 
 const listSubCounties = `-- name: ListSubCounties :many
 SELECT id, name, county_id, sub_county_given_id, created_at, updated_at FROM sub_counties
-ORDER BY name
+ORDER BY sub_county_given_id
 LIMIT ? OFFSET ?
 `
 
@@ -185,7 +185,7 @@ func (q *Queries) ListSubCounties(ctx context.Context, arg ListSubCountiesParams
 const searchSubCountiesByName = `-- name: SearchSubCountiesByName :many
 SELECT id, name, county_id, sub_county_given_id, created_at, updated_at FROM sub_counties
 WHERE LOWER(name) LIKE '%' || LOWER(?) || '%'
-ORDER BY name
+ORDER BY sub_county_given_id
 LIMIT ? OFFSET ?
 `
 
@@ -223,4 +223,15 @@ func (q *Queries) SearchSubCountiesByName(ctx context.Context, arg SearchSubCoun
 		return nil, err
 	}
 	return items, nil
+}
+
+const totalSubCounties = `-- name: TotalSubCounties :one
+SELECT COUNT(*) AS total FROM sub_counties
+`
+
+func (q *Queries) TotalSubCounties(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, totalSubCounties)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
 }

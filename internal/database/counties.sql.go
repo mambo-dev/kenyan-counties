@@ -72,7 +72,7 @@ func (q *Queries) GetCountyByName(ctx context.Context, name string) (County, err
 
 const listCounties = `-- name: ListCounties :many
 SELECT id, name, county_given_id, created_at, updated_at FROM counties
-ORDER BY name
+ORDER BY county_given_id
 LIMIT ? OFFSET ?
 `
 
@@ -113,7 +113,7 @@ func (q *Queries) ListCounties(ctx context.Context, arg ListCountiesParams) ([]C
 const searchCountiesByName = `-- name: SearchCountiesByName :many
 SELECT id, name, county_given_id, created_at, updated_at FROM counties
 WHERE LOWER(name) LIKE '%' || LOWER(?) || '%'
-ORDER BY name
+ORDER BY county_given_id
 LIMIT ? OFFSET ?
 `
 
@@ -150,4 +150,15 @@ func (q *Queries) SearchCountiesByName(ctx context.Context, arg SearchCountiesBy
 		return nil, err
 	}
 	return items, nil
+}
+
+const totalCounties = `-- name: TotalCounties :one
+SELECT COUNT(*) AS total FROM counties
+`
+
+func (q *Queries) TotalCounties(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, totalCounties)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
 }

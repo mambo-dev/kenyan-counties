@@ -11,7 +11,7 @@ WHERE county_given_id = ?;
 -- name: SearchCountiesByName :many
 SELECT * FROM counties
 WHERE LOWER(name) LIKE '%' || LOWER(?) || '%'
-ORDER BY name
+ORDER BY county_given_id
 LIMIT ? OFFSET ?;
 
 -- name: CreateCounty :one
@@ -21,8 +21,10 @@ RETURNING *;
 
 -- name: ListCounties :many
 SELECT * FROM counties
-ORDER BY name
+ORDER BY county_given_id
 LIMIT ? OFFSET ?;
 
+-- name: TotalCounties :one
+SELECT COUNT(*) AS total FROM counties;
 
 

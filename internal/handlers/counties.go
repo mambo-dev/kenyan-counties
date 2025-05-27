@@ -12,6 +12,7 @@ import (
 	"github.com/mambo-dev/kenya-locations/config"
 	"github.com/mambo-dev/kenya-locations/internal"
 	"github.com/mambo-dev/kenya-locations/internal/database"
+	"github.com/mambo-dev/kenya-locations/internal/utils"
 )
 
 type Handler struct {
@@ -43,9 +44,23 @@ func transformToCountyResponse(county database.County) internal.CountyResponse {
 
 func (h *Handler) GetCounties(w http.ResponseWriter, r *http.Request) {
 
+	countiesCount, err := h.cfg.Db.TotalCounties(r.Context())
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to count counties", err, false)
+		return
+	}
+
+	limitOffset, errMsg, err := utils.SafeLimitOffsetParser(r, countiesCount)
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, errMsg, err, false)
+		return
+	}
+
 	counties, err := h.cfg.Db.ListCounties(r.Context(), database.ListCountiesParams{
-		Limit:  50,
-		Offset: 0,
+		Limit:  int64(limitOffset.Limit),
+		Offset: int64(limitOffset.Offset),
 	})
 
 	if err != nil {
@@ -93,6 +108,20 @@ func (h *Handler) GetCountyByName(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) SearchCountyByName(w http.ResponseWriter, r *http.Request) {
 
+	countiesCount, err := h.cfg.Db.TotalCounties(r.Context())
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to count counties", err, false)
+		return
+	}
+
+	limitOffset, errMsg, err := utils.SafeLimitOffsetParser(r, countiesCount)
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, errMsg, err, false)
+		return
+	}
+
 	countyName := r.URL.Query().Get("countyName")
 	if countyName == "" {
 		respondWithError(w, http.StatusBadRequest, "Missing countyName query parameter", errors.New("missing countyName parameter"), false)
@@ -106,9 +135,10 @@ func (h *Handler) SearchCountyByName(w http.ResponseWriter, r *http.Request) {
 
 	counties, err := h.cfg.Db.SearchCountiesByName(r.Context(), database.SearchCountiesByNameParams{
 		LOWER:  strings.ToLower(countyName),
-		Limit:  50,
-		Offset: 0,
+		Limit:  int64(limitOffset.Limit),
+		Offset: int64(limitOffset.Offset),
 	})
+
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			respondWithError(w, http.StatusNotFound, "No counties found matching the name", err, false)

@@ -79,6 +79,25 @@ func (q *Queries) GetWardByID(ctx context.Context, id string) (Ward, error) {
 	return i, err
 }
 
+const getWardByName = `-- name: GetWardByName :one
+SELECT id, name, sub_county_id, ward_given_id, created_at, updated_at FROM wards
+WHERE name = ?
+`
+
+func (q *Queries) GetWardByName(ctx context.Context, name string) (Ward, error) {
+	row := q.db.QueryRowContext(ctx, getWardByName, name)
+	var i Ward
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.SubCountyID,
+		&i.WardGivenID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getWardsBySubCountyID = `-- name: GetWardsBySubCountyID :many
 SELECT id, name, sub_county_id, ward_given_id, created_at, updated_at FROM wards
 WHERE sub_county_id = ?
@@ -122,10 +141,51 @@ func (q *Queries) GetWardsBySubCountyID(ctx context.Context, arg GetWardsBySubCo
 	return items, nil
 }
 
+const listWards = `-- name: ListWards :many
+SELECT id, name, sub_county_id, ward_given_id, created_at, updated_at FROM wards
+ORDER BY ward_given_id
+LIMIT ? OFFSET ?
+`
+
+type ListWardsParams struct {
+	Limit  int64
+	Offset int64
+}
+
+func (q *Queries) ListWards(ctx context.Context, arg ListWardsParams) ([]Ward, error) {
+	rows, err := q.db.QueryContext(ctx, listWards, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Ward
+	for rows.Next() {
+		var i Ward
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.SubCountyID,
+			&i.WardGivenID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const searchWardsByName = `-- name: SearchWardsByName :many
 SELECT id, name, sub_county_id, ward_given_id, created_at, updated_at FROM wards
 WHERE LOWER(name) LIKE '%' || LOWER(?) || '%'
-ORDER BY name
+ORDER BY ward_given_id
 LIMIT ? OFFSET ?
 `
 
@@ -163,4 +223,15 @@ func (q *Queries) SearchWardsByName(ctx context.Context, arg SearchWardsByNamePa
 		return nil, err
 	}
 	return items, nil
+}
+
+const totalWards = `-- name: TotalWards :one
+SELECT COUNT(*) AS total FROM wards
+`
+
+func (q *Queries) TotalWards(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, totalWards)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
 }

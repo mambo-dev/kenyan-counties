@@ -13,13 +13,13 @@ WHERE sub_county_given_id = ?;
 -- name: GetSubCountiesByCountyID :many
 SELECT * FROM sub_counties
 WHERE county_id = ?
-ORDER BY name
+ORDER BY sub_county_given_id
 LIMIT ? OFFSET ?;
 
 -- name: SearchSubCountiesByName :many
 SELECT * FROM sub_counties
 WHERE LOWER(name) LIKE '%' || LOWER(?) || '%'
-ORDER BY name
+ORDER BY sub_county_given_id
 LIMIT ? OFFSET ?;
 
 -- name: CreateSubCounty :one
@@ -31,5 +31,8 @@ RETURNING *;
 
 -- name: ListSubCounties :many
 SELECT * FROM sub_counties
-ORDER BY name
+ORDER BY sub_county_given_id
 LIMIT ? OFFSET ?;
+
+-- name: TotalSubCounties :one
+SELECT COUNT(*) AS total FROM sub_counties;

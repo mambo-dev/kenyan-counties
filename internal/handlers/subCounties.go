@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/mambo-dev/kenya-locations/internal"
 	"github.com/mambo-dev/kenya-locations/internal/database"
+	"github.com/mambo-dev/kenya-locations/internal/utils"
 )
 
 func transformToSubCountyResponse(subCounty database.SubCounty) internal.SubCountyResponse {
@@ -34,9 +35,22 @@ func transformToSubCountyResponse(subCounty database.SubCounty) internal.SubCoun
 }
 
 func (h *Handler) GetSubCounties(w http.ResponseWriter, r *http.Request) {
+	subCountyCount, err := h.cfg.Db.TotalSubCounties(r.Context())
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to count counties", err, false)
+		return
+	}
+
+	limitOffset, errMsg, err := utils.SafeLimitOffsetParser(r, subCountyCount)
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, errMsg, err, false)
+		return
+	}
 	subCounties, err := h.cfg.Db.ListSubCounties(r.Context(), database.ListSubCountiesParams{
-		Limit:  290,
-		Offset: 0,
+		Limit:  int64(limitOffset.Limit),
+		Offset: int64(limitOffset.Offset),
 	})
 
 	if err != nil {
@@ -52,7 +66,10 @@ func (h *Handler) GetSubCounties(w http.ResponseWriter, r *http.Request) {
 
 	respondWithJSON(w, http.StatusOK, internal.ApiResponse{
 		Status: "success",
-		Data:   response,
+		Data: internal.PaginatedResponse{
+			TotalCount: subCountyCount,
+			Data:       response,
+		},
 	})
 }
 
@@ -130,10 +147,24 @@ func (h *Handler) SearchSubCountyByName(w http.ResponseWriter, r *http.Request) 
 		respondWithError(w, http.StatusBadRequest, "Invalid sub-county name parameter", errors.New("invalid characters in sub-county name"), false)
 		return
 	}
+
+	subCountyCount, err := h.cfg.Db.TotalSubCounties(r.Context())
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to count counties", err, false)
+		return
+	}
+
+	limitOffset, errMsg, err := utils.SafeLimitOffsetParser(r, subCountyCount)
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, errMsg, err, false)
+		return
+	}
 	subCounties, err := h.cfg.Db.SearchSubCountiesByName(r.Context(), database.SearchSubCountiesByNameParams{
 		LOWER:  subCountyName,
-		Limit:  20,
-		Offset: 0,
+		Limit:  int64(limitOffset.Limit),
+		Offset: int64(limitOffset.Offset),
 	})
 
 	if err != nil {
@@ -147,7 +178,10 @@ func (h *Handler) SearchSubCountyByName(w http.ResponseWriter, r *http.Request) 
 
 	respondWithJSON(w, http.StatusOK, internal.ApiResponse{
 		Status: "success",
-		Data:   response,
+		Data: internal.PaginatedResponse{
+			TotalCount: subCountyCount,
+			Data:       response,
+		},
 	})
 
 }
