@@ -1,23 +1,24 @@
 -- name: GetCountyByName :one
 SELECT * FROM counties
-WHERE name = $1;
+WHERE name = ?;
 
 -- name: SearchCountiesByName :many
 SELECT * FROM counties
-WHERE name ILIKE '%' || $1 || '%'
+WHERE LOWER(name) LIKE '%' || LOWER(?) || '%'
 ORDER BY name
-LIMIT $2 OFFSET $3;
+LIMIT ? OFFSET ?;
 
 -- name: CreateCounty :one
-INSERT INTO counties (name, county_given_id)
-VALUES ($1, $2)
+INSERT INTO counties (id, name, county_given_id)
+VALUES (?, ?, ?)
 RETURNING *;
 
 -- name: ListCounties :many
 SELECT * FROM counties
 ORDER BY name
-LIMIT $1 OFFSET $2;
+LIMIT ? OFFSET ?;
 
 -- name: DeleteCountyByID :exec
 DELETE FROM counties
-WHERE id = $1;
+WHERE id = ?;
+
