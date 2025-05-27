@@ -6,9 +6,23 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
+
+	"github.com/mambo-dev/kenya-locations/config"
+	"github.com/mambo-dev/kenya-locations/internal/database"
 )
 
 func main() {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("failed to load config: %v", err)
+	}
+
+	db, err := database.Connect(cfg.DBURL)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
+	defer db.Close()
 
 	csvFile, err := os.Open("counties.csv")
 
@@ -52,7 +66,7 @@ func main() {
 		if !ok {
 			counties[parseCountyIdInt] = County{
 				CountyId:   parseCountyIdInt,
-				CountyName: record[1],
+				CountyName: strings.ToLower(record[1]),
 			}
 		}
 
@@ -88,7 +102,7 @@ func main() {
 			subCounties[parseSubCountyIdInt] = SubCounty{
 				SubCountyCountyId: parseSubCountyIdInt,
 				SubCountyId:       parseCountyIdInt,
-				SubCountyName:     record[3],
+				SubCountyName:     strings.ToLower(record[3]),
 			}
 		}
 
@@ -125,7 +139,7 @@ func main() {
 			wards[parseWardIdInt] = Ward{
 				SubCountyId: parseSubCountyIdInt,
 				WardId:      parseWardIdInt,
-				WardName:    record[5],
+				WardName:    strings.ToLower(record[5]),
 			}
 		}
 

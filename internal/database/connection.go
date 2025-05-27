@@ -7,5 +7,5 @@ import (
 )
 
 func Connect(dsn string) (*sql.DB, error) {
-	return sql.Open("postgres", dsn)
+	return sql.Open("sqlite", dsn)
 }
