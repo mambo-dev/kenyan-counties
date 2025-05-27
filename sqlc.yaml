@@ -1,8 +1,11 @@
 version: "2"
 sql:
-  - engine: "postgresql"
-    schema: "sql/schema"
-    queries: "sql/query"
-    codegen:
-      out: "internal/database"
-      package: "db"
+  - schema: "sql/schema"
+    queries: "sql/queries"
+    engine: "sqlite"
+    gen:
+      go:
+        out: "internal/database"
+        overrides:
+          - db_type: "pg_catalog.numeric"
+            go_type: "float64"
