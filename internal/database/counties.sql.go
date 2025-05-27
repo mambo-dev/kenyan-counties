@@ -18,11 +18,29 @@ RETURNING id, name, county_given_id, created_at, updated_at
 type CreateCountyParams struct {
 	ID            string
 	Name          string
-	CountyGivenID string
+	CountyGivenID int64
 }
 
 func (q *Queries) CreateCounty(ctx context.Context, arg CreateCountyParams) (County, error) {
 	row := q.db.QueryRowContext(ctx, createCounty, arg.ID, arg.Name, arg.CountyGivenID)
+	var i County
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.CountyGivenID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getCountyByGivenId = `-- name: GetCountyByGivenId :one
+SELECT id, name, county_given_id, created_at, updated_at FROM counties
+WHERE county_given_id = ?
+`
+
+func (q *Queries) GetCountyByGivenId(ctx context.Context, countyGivenID int64) (County, error) {
+	row := q.db.QueryRowContext(ctx, getCountyByGivenId, countyGivenID)
 	var i County
 	err := row.Scan(
 		&i.ID,

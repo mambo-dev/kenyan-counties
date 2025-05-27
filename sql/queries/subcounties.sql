@@ -2,6 +2,10 @@
 SELECT * FROM sub_counties
 WHERE id = ?;
 
+-- name: GetSubCountyByGivenID :one
+SELECT * FROM sub_counties
+WHERE sub_county_given_id = ?;
+
 -- name: GetSubCountiesByCountyID :many
 SELECT * FROM sub_counties
 WHERE county_id = ?
@@ -15,7 +19,7 @@ ORDER BY name
 LIMIT ? OFFSET ?;
 
 -- name: CreateSubCounty :one
-INSERT INTO sub_counties (id, name, county_id)
-VALUES (?, ?, ?)
+INSERT INTO sub_counties (id, name, county_id, sub_county_given_id)
+VALUES (?, ?, ?, ?)
 RETURNING *;
 

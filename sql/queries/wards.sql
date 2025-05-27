@@ -15,7 +15,7 @@ ORDER BY name
 LIMIT ? OFFSET ?;
 
 -- name: CreateWard :one
-INSERT INTO wards (id, name, sub_county_id)
-VALUES (?, ?, ?)
+INSERT INTO wards (id, name, sub_county_id, ward_given_id)
+VALUES (?, ?, ?, ?)
 RETURNING *;
 

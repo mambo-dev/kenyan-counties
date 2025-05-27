@@ -2,6 +2,11 @@
 SELECT * FROM counties
 WHERE name = ?;
 
+-- name: GetCountyByGivenId :one
+SELECT * FROM counties
+WHERE county_given_id = ?;
+
+
 -- name: SearchCountiesByName :many
 SELECT * FROM counties
 WHERE LOWER(name) LIKE '%' || LOWER(?) || '%'

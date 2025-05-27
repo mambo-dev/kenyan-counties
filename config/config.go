@@ -5,13 +5,15 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/mambo-dev/kenya-locations/internal/database"
 )
 
 type APIConfig struct {
-	Port      string
-	JWTSecret string
-	DBURL     string
-	WorkEnv   string
+	Port       string
+	TAuthToken string
+	DBURL      string
+	WorkEnv    string
+	Db         *database.Queries
 }
 
 func LoadConfig() (*APIConfig, error) {
@@ -21,10 +23,10 @@ func LoadConfig() (*APIConfig, error) {
 	}
 
 	cfg := &APIConfig{
-		Port:      getEnv("PORT"),
-		JWTSecret: getEnv("JWT_SECRET"),
-		DBURL:     getEnv("DATABASE_URL"),
-		WorkEnv:   getEnv("WORKENV"),
+		Port:       getEnv("PORT"),
+		DBURL:      getEnv("DATABASE_URL"),
+		WorkEnv:    getEnv("WORK_ENV"),
+		TAuthToken: getEnv("TAUTH_TOKEN"),
 	}
 
 	return cfg, nil
@@ -37,16 +39,4 @@ func getEnv(key string) string {
 		log.Fatalf("FATAL: %s environment variable is not set", key)
 	}
 	return value
-}
-
-type fatalError struct {
-	s string
-}
-
-func (e *fatalError) Error() string {
-	return "FATAL: " + e.s
-}
-
-func newFatalError(text string) error {
-	return &fatalError{text}
 }

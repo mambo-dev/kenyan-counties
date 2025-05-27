@@ -11,23 +11,25 @@ import (
 type County struct {
 	ID            string
 	Name          string
-	CountyGivenID string
+	CountyGivenID int64
 	CreatedAt     sql.NullTime
 	UpdatedAt     sql.NullTime
 }
 
 type SubCounty struct {
-	ID        string
-	Name      string
-	CountyID  string
-	CreatedAt sql.NullTime
-	UpdatedAt sql.NullTime
+	ID               string
+	Name             string
+	CountyID         string
+	SubCountyGivenID int64
+	CreatedAt        sql.NullTime
+	UpdatedAt        sql.NullTime
 }
 
 type Ward struct {
 	ID          string
 	Name        string
 	SubCountyID string
+	WardGivenID int64
 	CreatedAt   sql.NullTime
 	UpdatedAt   sql.NullTime
 }

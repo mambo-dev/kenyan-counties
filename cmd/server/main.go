@@ -19,7 +19,7 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	db, err := database.Connect(cfg.DBURL)
+	db, err := database.Connect(cfg.DBURL, cfg.TAuthToken)
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}

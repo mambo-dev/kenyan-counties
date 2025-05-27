@@ -10,24 +10,31 @@ import (
 )
 
 const createSubCounty = `-- name: CreateSubCounty :one
-INSERT INTO sub_counties (id, name, county_id)
-VALUES (?, ?, ?)
-RETURNING id, name, county_id, created_at, updated_at
+INSERT INTO sub_counties (id, name, county_id, sub_county_given_id)
+VALUES (?, ?, ?, ?)
+RETURNING id, name, county_id, sub_county_given_id, created_at, updated_at
 `
 
 type CreateSubCountyParams struct {
-	ID       string
-	Name     string
-	CountyID string
+	ID               string
+	Name             string
+	CountyID         string
+	SubCountyGivenID int64
 }
 
 func (q *Queries) CreateSubCounty(ctx context.Context, arg CreateSubCountyParams) (SubCounty, error) {
-	row := q.db.QueryRowContext(ctx, createSubCounty, arg.ID, arg.Name, arg.CountyID)
+	row := q.db.QueryRowContext(ctx, createSubCounty,
+		arg.ID,
+		arg.Name,
+		arg.CountyID,
+		arg.SubCountyGivenID,
+	)
 	var i SubCounty
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.CountyID,
+		&i.SubCountyGivenID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -35,7 +42,7 @@ func (q *Queries) CreateSubCounty(ctx context.Context, arg CreateSubCountyParams
 }
 
 const getSubCountiesByCountyID = `-- name: GetSubCountiesByCountyID :many
-SELECT id, name, county_id, created_at, updated_at FROM sub_counties
+SELECT id, name, county_id, sub_county_given_id, created_at, updated_at FROM sub_counties
 WHERE county_id = ?
 ORDER BY name
 LIMIT ? OFFSET ?
@@ -60,6 +67,7 @@ func (q *Queries) GetSubCountiesByCountyID(ctx context.Context, arg GetSubCounti
 			&i.ID,
 			&i.Name,
 			&i.CountyID,
+			&i.SubCountyGivenID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -76,8 +84,27 @@ func (q *Queries) GetSubCountiesByCountyID(ctx context.Context, arg GetSubCounti
 	return items, nil
 }
 
+const getSubCountyByGivenID = `-- name: GetSubCountyByGivenID :one
+SELECT id, name, county_id, sub_county_given_id, created_at, updated_at FROM sub_counties
+WHERE sub_county_given_id = ?
+`
+
+func (q *Queries) GetSubCountyByGivenID(ctx context.Context, subCountyGivenID int64) (SubCounty, error) {
+	row := q.db.QueryRowContext(ctx, getSubCountyByGivenID, subCountyGivenID)
+	var i SubCounty
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.CountyID,
+		&i.SubCountyGivenID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getSubCountyByID = `-- name: GetSubCountyByID :one
-SELECT id, name, county_id, created_at, updated_at FROM sub_counties
+SELECT id, name, county_id, sub_county_given_id, created_at, updated_at FROM sub_counties
 WHERE id = ?
 `
 
@@ -88,6 +115,7 @@ func (q *Queries) GetSubCountyByID(ctx context.Context, id string) (SubCounty, e
 		&i.ID,
 		&i.Name,
 		&i.CountyID,
+		&i.SubCountyGivenID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -95,7 +123,7 @@ func (q *Queries) GetSubCountyByID(ctx context.Context, id string) (SubCounty, e
 }
 
 const searchSubCountiesByName = `-- name: SearchSubCountiesByName :many
-SELECT id, name, county_id, created_at, updated_at FROM sub_counties
+SELECT id, name, county_id, sub_county_given_id, created_at, updated_at FROM sub_counties
 WHERE LOWER(name) LIKE '%' || LOWER(?) || '%'
 ORDER BY name
 LIMIT ? OFFSET ?
@@ -120,6 +148,7 @@ func (q *Queries) SearchSubCountiesByName(ctx context.Context, arg SearchSubCoun
 			&i.ID,
 			&i.Name,
 			&i.CountyID,
+			&i.SubCountyGivenID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {

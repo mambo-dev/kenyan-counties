@@ -10,24 +10,31 @@ import (
 )
 
 const createWard = `-- name: CreateWard :one
-INSERT INTO wards (id, name, sub_county_id)
-VALUES (?, ?, ?)
-RETURNING id, name, sub_county_id, created_at, updated_at
+INSERT INTO wards (id, name, sub_county_id, ward_given_id)
+VALUES (?, ?, ?, ?)
+RETURNING id, name, sub_county_id, ward_given_id, created_at, updated_at
 `
 
 type CreateWardParams struct {
 	ID          string
 	Name        string
 	SubCountyID string
+	WardGivenID int64
 }
 
 func (q *Queries) CreateWard(ctx context.Context, arg CreateWardParams) (Ward, error) {
-	row := q.db.QueryRowContext(ctx, createWard, arg.ID, arg.Name, arg.SubCountyID)
+	row := q.db.QueryRowContext(ctx, createWard,
+		arg.ID,
+		arg.Name,
+		arg.SubCountyID,
+		arg.WardGivenID,
+	)
 	var i Ward
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.SubCountyID,
+		&i.WardGivenID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -35,7 +42,7 @@ func (q *Queries) CreateWard(ctx context.Context, arg CreateWardParams) (Ward, e
 }
 
 const getWardByID = `-- name: GetWardByID :one
-SELECT id, name, sub_county_id, created_at, updated_at FROM wards
+SELECT id, name, sub_county_id, ward_given_id, created_at, updated_at FROM wards
 WHERE id = ?
 `
 
@@ -46,6 +53,7 @@ func (q *Queries) GetWardByID(ctx context.Context, id string) (Ward, error) {
 		&i.ID,
 		&i.Name,
 		&i.SubCountyID,
+		&i.WardGivenID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -53,7 +61,7 @@ func (q *Queries) GetWardByID(ctx context.Context, id string) (Ward, error) {
 }
 
 const getWardsBySubCountyID = `-- name: GetWardsBySubCountyID :many
-SELECT id, name, sub_county_id, created_at, updated_at FROM wards
+SELECT id, name, sub_county_id, ward_given_id, created_at, updated_at FROM wards
 WHERE sub_county_id = ?
 ORDER BY name
 LIMIT ? OFFSET ?
@@ -78,6 +86,7 @@ func (q *Queries) GetWardsBySubCountyID(ctx context.Context, arg GetWardsBySubCo
 			&i.ID,
 			&i.Name,
 			&i.SubCountyID,
+			&i.WardGivenID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -95,7 +104,7 @@ func (q *Queries) GetWardsBySubCountyID(ctx context.Context, arg GetWardsBySubCo
 }
 
 const searchWardsByName = `-- name: SearchWardsByName :many
-SELECT id, name, sub_county_id, created_at, updated_at FROM wards
+SELECT id, name, sub_county_id, ward_given_id, created_at, updated_at FROM wards
 WHERE LOWER(name) LIKE '%' || LOWER(?) || '%'
 ORDER BY name
 LIMIT ? OFFSET ?
@@ -120,6 +129,7 @@ func (q *Queries) SearchWardsByName(ctx context.Context, arg SearchWardsByNamePa
 			&i.ID,
 			&i.Name,
 			&i.SubCountyID,
+			&i.WardGivenID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {

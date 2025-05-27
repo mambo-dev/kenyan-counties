@@ -2,10 +2,27 @@ package database
 
 import (
 	"database/sql"
+	"os"
+	"path/filepath"
 
-	_ "github.com/lib/pq"
+	"github.com/tursodatabase/go-libsql"
 )
 
-func Connect(dsn string) (*sql.DB, error) {
-	return sql.Open("sqlite", dsn)
+func Connect(dbURL, authToken string) (*sql.DB, error) {
+	dbName := "local.db"
+
+	dir, err := os.MkdirTemp("", "libsql-*")
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(dir)
+
+	dbPath := filepath.Join(dir, dbName)
+	connector, err := libsql.NewEmbeddedReplicaConnector(dbPath, dbURL, libsql.WithAuthToken(authToken))
+
+	if err != nil {
+		return nil, err
+	}
+	db := sql.OpenDB(connector)
+	return db, nil
 }
