@@ -11,9 +11,12 @@ import (
 	"github.com/mambo-dev/kenya-locations/internal/database"
 	handler "github.com/mambo-dev/kenya-locations/internal/handlers"
 	"github.com/mambo-dev/kenya-locations/internal/middleware"
+	"github.com/mambo-dev/kenya-locations/internal/utils"
 )
 
 func main() {
+	go utils.CleanUpStaleTimers()
+
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
@@ -35,6 +38,7 @@ func main() {
 	}))
 
 	router.Use(middleware.SecureHeaders)
+	router.Use(middleware.RateLimitMiddleware)
 
 	v1 := chi.NewRouter()
 

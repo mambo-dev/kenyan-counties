@@ -152,9 +152,11 @@ func main() {
 					SubCountyID: subCounty.ID,
 					WardGivenID: ward.ID,
 				})
+
 				if err != nil {
 					log.Printf("Failed to save ward %s: %v", ward.Name, err)
 				}
+
 			} else {
 				log.Printf("Failed to get ward %d: %v", ward.ID, err)
 			}
