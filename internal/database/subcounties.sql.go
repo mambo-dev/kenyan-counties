@@ -122,6 +122,66 @@ func (q *Queries) GetSubCountyByID(ctx context.Context, id string) (SubCounty, e
 	return i, err
 }
 
+const getSubCountyByName = `-- name: GetSubCountyByName :one
+SELECT id, name, county_id, sub_county_given_id, created_at, updated_at FROM sub_counties
+WHERE name = ?
+`
+
+func (q *Queries) GetSubCountyByName(ctx context.Context, name string) (SubCounty, error) {
+	row := q.db.QueryRowContext(ctx, getSubCountyByName, name)
+	var i SubCounty
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.CountyID,
+		&i.SubCountyGivenID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const listSubCounties = `-- name: ListSubCounties :many
+SELECT id, name, county_id, sub_county_given_id, created_at, updated_at FROM sub_counties
+ORDER BY name
+LIMIT ? OFFSET ?
+`
+
+type ListSubCountiesParams struct {
+	Limit  int64
+	Offset int64
+}
+
+func (q *Queries) ListSubCounties(ctx context.Context, arg ListSubCountiesParams) ([]SubCounty, error) {
+	rows, err := q.db.QueryContext(ctx, listSubCounties, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SubCounty
+	for rows.Next() {
+		var i SubCounty
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.CountyID,
+			&i.SubCountyGivenID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const searchSubCountiesByName = `-- name: SearchSubCountiesByName :many
 SELECT id, name, county_id, sub_county_given_id, created_at, updated_at FROM sub_counties
 WHERE LOWER(name) LIKE '%' || LOWER(?) || '%'
