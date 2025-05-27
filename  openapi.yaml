@@ -1,0 +1,162 @@
+openapi: 3.0.3
+info:
+  title: Kenya Locations API
+  version: 1.0.0
+  description: |
+    REST API for accessing Kenyan counties, sub-counties, and wards.
+
+servers:
+  - url: http://localhost:8080/v1
+
+paths:
+  /counties:
+    get:
+      summary: List all counties
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Maximum number of counties to return
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            minimum: 0
+          description: Number of counties to skip
+      responses:
+        "200":
+          description: A paginated list of counties
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedCountyResponse"
+
+  /counties/{countyID}/sub-counties:
+    get:
+      summary: List sub-counties for a county
+      parameters:
+        - in: path
+          name: countyID
+          required: true
+          schema:
+            type: string
+          description: UUID of the county
+      responses:
+        "200":
+          description: List of sub-counties for the county
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedSubCountyResponse"
+
+  /counties/name/{countyName}:
+    get:
+      summary: Get county by name
+      parameters:
+        - in: path
+          name: countyName
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: County details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountyResponse"
+        "404":
+          description: County not found
+
+  /counties/search:
+    get:
+      summary: Search counties by name
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+          description: Search query for county name
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedCountyResponse"
+
+  /sub-counties:
+    get:
+      summary: List all sub-counties
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        "200":
+          description: A paginated list of sub-counties
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedSubCountyResponse"
+
+components:
+  schemas:
+    CountyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        county_id:
+          type: integer
+    PaginatedCountyResponse:
+      type: object
+      properties:
+        total_count:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CountyResponse"
+    SubCountyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        county_id:
+          type: string
+        sub_county_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PaginatedSubCountyResponse:
+      type: object
+      properties:
+        total_count:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubCountyResponse"
