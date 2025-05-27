@@ -41,6 +41,25 @@ func (q *Queries) CreateWard(ctx context.Context, arg CreateWardParams) (Ward, e
 	return i, err
 }
 
+const getWardByGivenID = `-- name: GetWardByGivenID :one
+SELECT id, name, sub_county_id, ward_given_id, created_at, updated_at FROM wards
+WHERE ward_given_id = ?
+`
+
+func (q *Queries) GetWardByGivenID(ctx context.Context, wardGivenID int64) (Ward, error) {
+	row := q.db.QueryRowContext(ctx, getWardByGivenID, wardGivenID)
+	var i Ward
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.SubCountyID,
+		&i.WardGivenID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getWardByID = `-- name: GetWardByID :one
 SELECT id, name, sub_county_id, ward_given_id, created_at, updated_at FROM wards
 WHERE id = ?

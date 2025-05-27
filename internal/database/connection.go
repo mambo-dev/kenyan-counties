@@ -2,27 +2,18 @@ package database
 
 import (
 	"database/sql"
-	"os"
-	"path/filepath"
+	"fmt"
+	"strings"
 
-	"github.com/tursodatabase/go-libsql"
+	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
 func Connect(dbURL, authToken string) (*sql.DB, error) {
-	dbName := "local.db"
 
-	dir, err := os.MkdirTemp("", "libsql-*")
+	db, err := sql.Open("libsql", strings.Join([]string{dbURL, fmt.Sprintf("authToken=%v", authToken)}, "?"))
 	if err != nil {
 		return nil, err
 	}
-	defer os.RemoveAll(dir)
 
-	dbPath := filepath.Join(dir, dbName)
-	connector, err := libsql.NewEmbeddedReplicaConnector(dbPath, dbURL, libsql.WithAuthToken(authToken))
-
-	if err != nil {
-		return nil, err
-	}
-	db := sql.OpenDB(connector)
 	return db, nil
 }

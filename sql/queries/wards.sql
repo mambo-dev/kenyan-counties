@@ -2,6 +2,10 @@
 SELECT * FROM wards
 WHERE id = ?;
 
+-- name: GetWardByGivenID :one
+SELECT * FROM wards
+WHERE ward_given_id = ?;
+
 -- name: GetWardsBySubCountyID :many
 SELECT * FROM wards
 WHERE sub_county_id = ?

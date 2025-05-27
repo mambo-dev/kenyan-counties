@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/csv"
+	"errors"
 	"log"
 	"os"
 	"strconv"
@@ -27,183 +29,135 @@ func main() {
 
 	cfg.Db = database.New(db)
 	csvFile, err := os.Open("counties.csv")
-
 	if err != nil {
 		log.Fatal("Error opening counties.csv:", err)
 	}
-
 	defer csvFile.Close()
 
 	reader := csv.NewReader(csvFile)
-
 	records, err := reader.ReadAll()
-
 	if err != nil {
 		log.Fatal("Error reading the csv:", err)
 	}
 
-	count := 0
-
 	type County struct {
-		CountyId   int64
-		CountyName string
+		ID   int64
+		Name string
+	}
+	type SubCounty struct {
+		ID       int64
+		Name     string
+		CountyID int64
+	}
+	type Ward struct {
+		ID          int64
+		Name        string
+		SubCountyID int64
 	}
 
-	counties := make(map[int64]County, 0)
+	counties := make(map[int64]County)
+	subCounties := make(map[int64]SubCounty)
+	wards := make(map[int64]Ward)
 
-	for index, record := range records {
-		if index == 0 {
-
+	for i, record := range records {
+		if i == 0 {
 			continue
 		}
-		count += 1
-		parseCountyIdInt, err := strconv.ParseInt(record[0], 0, 64)
-
+		countyID, err := strconv.ParseInt(record[0], 10, 64)
 		if err != nil {
-			log.Fatal("Error parsing a county id", record)
+			log.Printf("Error parsing county id at row %d: %v", i, err)
+			continue
+		}
+		countyName := strings.ToLower(record[1])
+		if _, exists := counties[countyID]; !exists {
+			counties[countyID] = County{ID: countyID, Name: countyName}
 		}
 
-		_, ok := counties[parseCountyIdInt]
-
-		if !ok {
-			counties[parseCountyIdInt] = County{
-				CountyId:   parseCountyIdInt,
-				CountyName: strings.ToLower(record[1]),
-			}
+		subCountyID, err := strconv.ParseInt(record[2], 10, 64)
+		if err != nil {
+			log.Printf("Error parsing sub-county id at row %d: %v", i, err)
+			continue
+		}
+		subCountyName := strings.ToLower(record[3])
+		if _, exists := subCounties[subCountyID]; !exists {
+			subCounties[subCountyID] = SubCounty{ID: subCountyID, Name: subCountyName, CountyID: countyID}
 		}
 
+		wardID, err := strconv.ParseInt(record[4], 10, 64)
+		if err != nil {
+			log.Printf("Error parsing ward id at row %d: %v", i, err)
+			continue
+		}
+		wardName := strings.ToLower(record[5])
+		if _, exists := wards[wardID]; !exists {
+			wards[wardID] = Ward{ID: wardID, Name: wardName, SubCountyID: subCountyID}
+		}
 	}
 
 	for _, county := range counties {
-		_, err := cfg.Db.CreateCounty(context.Background(), database.CreateCountyParams{
-			ID:            uuid.New().String(),
-			Name:          county.CountyName,
-			CountyGivenID: county.CountyId,
-		})
-
+		_, err := cfg.Db.GetCountyByGivenId(context.Background(), county.ID)
 		if err != nil {
-			log.Println("Failed to save county", county.CountyName)
-			continue
-		}
-	}
-
-	type SubCounty struct {
-		SubCountyId       int64
-		SubCountyName     string
-		SubCountyCountyId string
-	}
-	subCounties := make(map[int64]SubCounty, 0)
-	for index, record := range records {
-		if index == 0 {
-
-			continue
-		}
-		count += 1
-		parseCountyIdInt, err := strconv.ParseInt(record[0], 0, 64)
-
-		if err != nil {
-			log.Fatal("Error parsing a county id", record)
-		}
-
-		county, err := cfg.Db.GetCountyByGivenId(context.Background(), parseCountyIdInt)
-
-		if err != nil {
-			log.Fatal("Failed to get a given county id ", err)
-			continue
-		}
-
-		parseSubCountyIdInt, err := strconv.ParseInt(record[2], 0, 64)
-
-		if err != nil {
-			log.Fatal("Error parsing a sub county id", record)
-		}
-
-		_, ok := subCounties[parseSubCountyIdInt]
-
-		if !ok {
-			subCounties[parseSubCountyIdInt] = SubCounty{
-				SubCountyCountyId: county.ID,
-				SubCountyId:       parseCountyIdInt,
-				SubCountyName:     strings.ToLower(record[3]),
+			if errors.Is(err, sql.ErrNoRows) {
+				_, err := cfg.Db.CreateCounty(context.Background(), database.CreateCountyParams{
+					ID:            uuid.New().String(),
+					Name:          county.Name,
+					CountyGivenID: county.ID,
+				})
+				if err != nil {
+					log.Printf("Failed to save county %s: %v", county.Name, err)
+				}
+			} else {
+				log.Printf("Failed to get county %d: %v", county.ID, err)
 			}
 		}
-
 	}
 
 	for _, subCounty := range subCounties {
-		_, err := cfg.Db.CreateSubCounty(context.Background(), database.CreateSubCountyParams{
-			ID:               uuid.New().String(),
-			Name:             subCounty.SubCountyName,
-			CountyID:         subCounty.SubCountyCountyId,
-			SubCountyGivenID: subCounty.SubCountyId,
-		})
-
+		county, err := cfg.Db.GetCountyByGivenId(context.Background(), subCounty.CountyID)
 		if err != nil {
-			log.Println("Failed to save sub county", subCounty.SubCountyName)
+			log.Printf("Failed to get county for sub-county %s: %v", subCounty.Name, err)
 			continue
 		}
-	}
-
-	type Ward struct {
-		SubCountyId string
-		WardName    string
-		WardId      int64
-	}
-
-	wards := make(map[int64]Ward, 0)
-	for index, record := range records {
-		if index == 0 {
-
-			continue
-		}
-		count += 1
-		parseWardIdInt, err := strconv.ParseInt(record[4], 0, 64)
-
+		_, err = cfg.Db.GetSubCountyByGivenID(context.Background(), subCounty.ID)
 		if err != nil {
-			log.Fatal("Error parsing a ward id", record)
-		}
-
-		parseSubCountyIdInt, err := strconv.ParseInt(record[2], 0, 64)
-		if err != nil {
-			log.Fatal("Error parsing a sub county id", record)
-		}
-
-		if err != nil {
-			log.Fatal("Failed to parse a given sub county id ", err)
-			continue
-		}
-
-		subCounty, err := cfg.Db.GetSubCountyByGivenID(context.Background(), parseSubCountyIdInt)
-
-		if err != nil {
-			log.Fatal("Failed toget a  sub county id ", err)
-			continue
-		}
-
-		_, ok := wards[parseWardIdInt]
-
-		if !ok {
-			wards[parseWardIdInt] = Ward{
-				SubCountyId: subCounty.ID,
-				WardId:      parseWardIdInt,
-				WardName:    strings.ToLower(record[5]),
+			if errors.Is(err, sql.ErrNoRows) {
+				_, err := cfg.Db.CreateSubCounty(context.Background(), database.CreateSubCountyParams{
+					ID:               uuid.New().String(),
+					Name:             subCounty.Name,
+					CountyID:         county.ID,
+					SubCountyGivenID: subCounty.ID,
+				})
+				if err != nil {
+					log.Printf("Failed to save sub-county %s: %v", subCounty.Name, err)
+				}
+			} else {
+				log.Printf("Failed to get sub-county %d: %v", subCounty.ID, err)
 			}
 		}
-
 	}
 
 	for _, ward := range wards {
-		_, err := cfg.Db.CreateWard(context.Background(), database.CreateWardParams{
-			ID:          uuid.New().String(),
-			Name:        ward.WardName,
-			SubCountyID: ward.SubCountyId,
-			WardGivenID: ward.WardId,
-		})
 
+		subCounty, err := cfg.Db.GetSubCountyByGivenID(context.Background(), ward.SubCountyID)
 		if err != nil {
-			log.Println("Failed to save ward", ward.WardName)
+			log.Printf("Failed to get sub-county for ward %s: %v", ward.Name, err)
 			continue
 		}
+		_, err = cfg.Db.GetWardByGivenID(context.Background(), ward.ID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				_, err := cfg.Db.CreateWard(context.Background(), database.CreateWardParams{
+					ID:          uuid.New().String(),
+					Name:        ward.Name,
+					SubCountyID: subCounty.ID,
+					WardGivenID: ward.ID,
+				})
+				if err != nil {
+					log.Printf("Failed to save ward %s: %v", ward.Name, err)
+				}
+			} else {
+				log.Printf("Failed to get ward %d: %v", ward.ID, err)
+			}
+		}
 	}
-
 }
