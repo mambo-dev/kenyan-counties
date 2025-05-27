@@ -50,18 +50,23 @@ func main() {
 		ReadHeaderTimeout: 30 * time.Second,
 	}
 
+	cfg.Db = database.New(db)
+
 	serverHandlers := handler.NewHandler(db, cfg)
 
 	v1.Get("/counties", serverHandlers.GetCounties)
-	v1.Get("/counties/{countyID}", serverHandlers.GetCounty)
-	v1.Get("/counties/{countyID}/sub-counties", serverHandlers.GetCountySubCounties)
+	v1.Get("/counties/{countyID}/sub-counties", serverHandlers.GetSubCountiesByCountyID)
+	v1.Get("/counties/name/{countyName}", serverHandlers.GetCountyByName)
+	v1.Get("/counties/search", serverHandlers.SearchCountyByName)
 
 	v1.Get("/sub-counties", serverHandlers.GetSubCounties)
-	v1.Get("/sub-counties/{subCountyID}", serverHandlers.GetSubCounty)
-	v1.Get("/sub-counties/{subCountyID}/wards", serverHandlers.GetSubCountyWards)
+	v1.Get("/sub-counties/{subCountyID}/wards", serverHandlers.GetWardsBySubCountyId)
+	v1.Get("/sub-counties/name/{subCountyName}", serverHandlers.GetSubCountyByName)
+	v1.Get("/sub-counties/search", serverHandlers.SearchSubCountyByName)
 
 	v1.Get("/wards", serverHandlers.GetWards)
-	v1.Get("/wards/{wardID}", serverHandlers.GetWard)
+	v1.Get("/wards/name/{wardName}", serverHandlers.GetWardByName)
+	v1.Get("/wards/search", serverHandlers.SearchWardByName)
 
 	log.Printf("Server running on http://localhost:%s", cfg.Port)
 	log.Fatal(srv.ListenAndServe())

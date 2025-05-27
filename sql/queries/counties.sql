@@ -2,6 +2,7 @@
 SELECT * FROM counties
 WHERE name = ?;
 
+
 -- name: GetCountyByGivenId :one
 SELECT * FROM counties
 WHERE county_given_id = ?;

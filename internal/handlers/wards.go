@@ -6,6 +6,14 @@ func (h *Handler) GetWards(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusNoContent, nil)
 }
 
-func (h *Handler) GetWard(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetWardByName(w http.ResponseWriter, r *http.Request) {
+	respondWithJSON(w, http.StatusNoContent, nil)
+}
+
+func (h *Handler) SearchWardByName(w http.ResponseWriter, r *http.Request) {
+	respondWithJSON(w, http.StatusNoContent, nil)
+}
+
+func (h *Handler) GetWardsBySubCountyId(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusNoContent, nil)
 }
