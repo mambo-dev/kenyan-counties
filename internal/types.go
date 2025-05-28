@@ -6,10 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type CountyParams struct {
-	Name string `json:"name"`
-}
-
 type CountyResponse struct {
 	ID       uuid.UUID `json:"id"`
 	Name     string    `json:"name"`
