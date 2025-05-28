@@ -46,4 +46,4 @@ jobs:
         run: ./scripts/migrateup.sh
 
       - name: Deploy to Cloud Run
-        run: gcloud run deploy kenyan_locations --image africa-south1-docker.pkg.dev/kenyan-locations-api/kenyan-locations-ar/kenyan_locations:latest --region africa-south1  --allow-unauthenticated --project kenyan-locations-api --max-instances=4
+        run: gcloud run deploy kenyan-locations --image africa-south1-docker.pkg.dev/kenyan-locations-api/kenyan-locations-ar/kenyan_locations:latest --region africa-south1  --allow-unauthenticated --project kenyan-locations-api --max-instances=4
