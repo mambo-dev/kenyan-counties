@@ -68,6 +68,7 @@ func main() {
 	v1.Get("/wards/name/{wardName}", serverHandlers.GetWardByName)
 	v1.Get("/wards/search", serverHandlers.SearchWardByName)
 
+	v1.Get("/healthz", serverHandlers.HandlerReadiness)
 	log.Printf("Server running on http://localhost:%s", cfg.Port)
 	log.Fatal(srv.ListenAndServe())
 }
