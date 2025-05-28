@@ -39,10 +39,10 @@ jobs:
         run: "gcloud info"
 
       - name: "Build gcloud image"
-        run: gcloud builds submit --tag africa-south1-docker.pkg.dev/linear-reporter-454220-n3/notely-ar-repo/notely:latest .
+        run: gcloud builds submit --tag africa-south1-docker.pkg.dev/kenyan-locations-api/kenyan-locations-ar/kenyan_locations:latest .
 
       - name: "Migrate database"
         run: ./scripts/migrateup.sh
 
       - name: Deploy to Cloud Run
-        run: gcloud run deploy notely --image africa-south1-docker.pkg.dev/linear-reporter-454220-n3/notely-ar-repo/notely:latest --region africa-south1  --allow-unauthenticated --project linear-reporter-454220-n3 --max-instances=4
+        run: gcloud run deploy notely --image africa-south1-docker.pkg.dev/kenyan-locations-api/kenyan-locations-ar/kenyan_locations:latest --region africa-south1  --allow-unauthenticated --project linear-reporter-454220-n3 --max-instances=4
