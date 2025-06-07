@@ -43,6 +43,8 @@ jobs:
         run: gcloud builds submit --tag africa-south1-docker.pkg.dev/kenyan-locations-api/kenyan-locations-ar/kenyan_locations:latest .
 
       - name: "Migrate database"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: ./scripts/migrateup.sh
 
       - name: Deploy to Cloud Run
